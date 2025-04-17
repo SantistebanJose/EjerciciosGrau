@@ -9,6 +9,9 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from fractions import Fraction
 
+
+
+
 class IntelligentTutorSystem:
     def __init__(self):
         # Tipos de ejercicios disponibles
@@ -196,10 +199,10 @@ class IntelligentTutorSystem:
     def start_session(self):
         """Inicia una sesión interactiva con el estudiante"""
         print("\n" + "=" * 60)
-        print("🧠 BIENVENIDO AL SISTEMA TUTOR INTELIGENTE DE MATEMÁTICAS 🧠".center(60))
+        print("BIENVENIDO AL SISTEMA TUTOR INTELIGENTE DE MATEMATICAS".center(60))
         print("=" * 60)
-        print("\nEste sistema te guiará en tu aprendizaje de matemáticas,")
-        print("adaptándose a tu nivel y recomendando ejercicios personalizados.")
+        print("\nEste sistema te guiara en tu aprendizaje de matematicas,")
+        print("adaptandose a tu nivel y recomendando ejercicios personalizados.")
 
         # Si hay historial, dar la bienvenida personalizada
         if self.student_history:
@@ -212,18 +215,18 @@ class IntelligentTutorSystem:
 
         while True:
             # Mostrar opciones de temas
-            print("\n📚 TEMAS DISPONIBLES 📚")
+            print("\n TEMAS DISPONIBLES")
             print("1. Relaciones de equivalencia (ejercicios de balanzas)")
-            print("2. Progresiones aritméticas")
+            print("2. Progresiones aritmeticas")
             print("3. Ecuaciones lineales")
             print("4. Funciones lineales")
             print("5. Proporcionalidad directa e inversa")
             print("6. Desigualdades")
             print("7. Constante de proporcionalidad")
-            print("8. Recomendación personalizada")
+            print("8. Recomendacion personalizada")
             print("9. Salir")
 
-            choice = input("\n> Selecciona una opción: ")
+            choice = input("\n> Selecciona una opcion: ")
 
             if choice == '9':
                 self.save_model()
