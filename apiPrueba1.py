@@ -25,6 +25,56 @@ temas = [
     "Recomendación personalizada",
 ]
 
+def _run_exercise_session(self, topic, difficulty_level):
+    """Ejecuta una sesión de ejercicios del tema y dificultad seleccionados"""
+    difficulty_names = {1: 'principiante', 2: 'intermedio', 3: 'avanzado'}
+    difficulty = difficulty_names[difficulty_level]
+
+    # Iniciar temporizador para medir tiempo de resolución
+    start_time = time.time()
+
+    # Generar ejercicio
+    generator = self.exercise_types[topic]
+    exercise = generator.generate_exercise(difficulty)
+
+    # Variables para seguimiento del progreso
+    steps_completed = 0
+    mistakes = 0
+    help_requested = 0
+    completed = False
+
+    # Presentar y resolver el ejercicio interactivamente
+    generator.format_exercise(exercise)
+    result = generator.solve_interactive(exercise, track_progress=True)
+
+    # Actualizar variables de seguimiento
+    steps_completed = result['steps_completed']
+    mistakes = result['mistakes']
+    help_requested = result['help_requested']
+    completed = result['completed']
+
+    # Calcular tiempo total
+    time_taken = time.time() - start_time
+
+    # Registrar interacción
+    self.track_interaction(
+        exercise_type=topic,
+        difficulty=difficulty_level,
+        steps_completed=steps_completed,
+        mistakes=mistakes,
+        help_requested=help_requested,
+        time_taken=time_taken,
+        completed=completed
+    )
+
+    # Mostrar feedback y recomendación
+    self._show_feedback(topic, difficulty_level, steps_completed, mistakes, help_requested, time_taken, completed)
+
+    # Preguntar si quiere otro ejercicio del mismo tipo
+    print("\n¿Quieres hacer otro ejercicio del mismo tipo? (s/n)")
+    if input("> ").lower() == 's':
+        self._run_exercise_session(topic, difficulty_level)
+
 @app.route('/temas', methods=['GET'])
 def obtener_temas():
     """Retorna la lista de temas disponibles"""

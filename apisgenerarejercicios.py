@@ -238,50 +238,207 @@ def get_exercise_types():
         'difficulty_levels': difficulty_levels
     })
 
+
+def get_exercise_text(exercise_type, exercise):
+    # Implementación según el tipo de ejercicio
+    # Esta función debería devolver una descripción legible del ejercicio
+    pass
+
+# Función para generar las opciones de respuesta
+
+
 @app.route('/api/exercise/generate', methods=['POST'])
 def generate_exercise():
     data = request.json
     
     # Validar datos de entrada
     if not data or 'exercise_type' not in data or 'difficulty_level' not in data:
-        return jsonify({'error': 'Datos incompletos. Se requiere tipo de ejercicio y nivel de dificultad'}), 400
+        return jsonify({
+            'error': 'Datos incompletos. Se requiere tipo de ejercicio y nivel de dificultad',
+            'detalles_requeridos': {
+                'exercise_type': 'Tipo de ejercicio (ej. matematicas, logica)',
+                'difficulty_level': 'Nivel de dificultad (1: Principiante, 2: Intermedio, 3: Avanzado)'
+            }
+        }), 400
     
     exercise_type = data['exercise_type']
     difficulty_level = int(data['difficulty_level'])
     
     # Validar tipo de ejercicio
     if exercise_type not in exercise_types:
-        return jsonify({'error': f'Tipo de ejercicio no válido. Opciones: {", ".join(exercise_types.keys())}'}), 400
+        return jsonify({
+            'error': 'Tipo de ejercicio no válido',
+            'tipos_disponibles': list(exercise_types.keys())
+        }), 400
     
     # Validar nivel de dificultad
     if difficulty_level not in [1, 2, 3]:
-        return jsonify({'error': 'Nivel de dificultad no válido. Opciones: 1 (Principiante), 2 (Intermedio), 3 (Avanzado)'}), 400
+        return jsonify({
+            'error': 'Nivel de dificultad no válido',
+            'niveles_disponibles': [
+                {'nivel': 1, 'descripcion': 'Principiante'},
+                {'nivel': 2, 'descripcion': 'Intermedio'},
+                {'nivel': 3, 'descripcion': 'Avanzado'}
+            ]
+        }), 400
     
-    # Generar ejercicio
+    # Mapeo de niveles de dificultad
     difficulty_names = {1: 'principiante', 2: 'intermedio', 3: 'avanzado'}
-    generator = exercise_types[exercise_type]
+    
+    # Función para generar opciones de respuesta
+    def generate_answer_options(exercise, exercise_type):
+        """
+        Genera opciones de respuesta para diferentes tipos de ejercicios.
+        
+        Args:
+            exercise (dict): El ejercicio generado
+            exercise_type (str): Tipo de ejercicio
+        
+        Returns:
+            dict: Un diccionario con opciones de respuesta y la respuesta correcta
+        """
+        def generar_opciones_variadas(valor_correcto):
+            """
+            Genera opciones de respuesta variadas para un valor correcto.
+            
+            Args:
+                valor_correcto (float/int): Valor correcto para generar opciones
+            
+            Returns:
+                dict: Diccionario con opciones de respuesta
+            """
+            # Asegurar que el valor sea numérico
+            if not isinstance(valor_correcto, (int, float)):
+                return {
+                    'opciones': [],
+                    'respuesta_correcta': None,
+                    'indice_respuesta_correcta': None
+                }
+            
+            # Generar opciones cercanas al valor correcto
+            respuestas = [
+                valor_correcto,  # Respuesta correcta
+                round(valor_correcto + random.uniform(-2, 2), 2),  # Opción cercana 1
+                round(valor_correcto * 1.5, 2),  # Opción multiplicada 1
+                round(valor_correcto * 0.5, 2)   # Opción multiplicada 2
+            ]
+            
+            # Eliminar duplicados
+            respuestas = list(dict.fromkeys(respuestas))
+            
+            # Asegurar 4 opciones únicas
+            while len(respuestas) < 4:
+                respuestas.append(round(valor_correcto + random.uniform(-5, 5), 2))
+                respuestas = list(dict.fromkeys(respuestas))
+            
+            # Barajar las respuestas
+            random.shuffle(respuestas)
+            
+            return {
+                'opciones': respuestas,
+                'respuesta_correcta': valor_correcto,
+                'indice_respuesta_correcta': respuestas.index(valor_correcto)
+            }
+        
+        # Mapeo de claves posibles para diferentes tipos de ejercicios
+        mapeo_claves = {
+            'constante_proporcionalidad': [
+                'constant', 'k_value', 'constante', 'valor_constante'
+            ],
+            'ecuacion_lineal': [
+                'x_value', 'x', 'valor_x', 'solution'
+            ],
+            'proporcionalidad': [
+                'y_value', 'x_value', 'y', 'x', 'valor_y', 'valor_x'
+            ],
+            'balanza': [
+                'caja_value', 'x_value', 'valor_caja', 'valor_x'
+            ],
+            'progresion_aritmetica': [
+                'termino_faltante', 'missing_term', 'valor_termino'
+            ],
+            'funcion_lineal': [
+                'm', 'pendiente', 'slope', 'b', 'intercepto', 'intercept'
+            ],
+            'desigualdades': [
+                'x_value', 'solution', 'valor_x'
+            ]
+        }
+        
+        try:
+            # Buscar claves relevantes para el tipo de ejercicio
+            claves_posibles = mapeo_claves.get(exercise_type, [])
+            
+            # Encontrar el primer valor no nulo
+            valor_correcto = None
+            for clave in claves_posibles:
+                valor = exercise.get(clave)
+                if valor is not None:
+                    valor_correcto = valor
+                    break
+            
+            # Si se encuentra un valor correcto, generar opciones
+            if valor_correcto is not None:
+                return generar_opciones_variadas(valor_correcto)
+            
+            # Si no se encuentra ningún valor
+            return {
+                'opciones': [],
+                'respuesta_correcta': None,
+                'indice_respuesta_correcta': None
+            }
+        
+        except Exception as e:
+            # Manejo de errores
+            print(f"Error generando opciones para {exercise_type}: {e}")
+            return {
+                'opciones': [],
+                'respuesta_correcta': None,
+                'indice_respuesta_correcta': None
+            }
     
     try:
-        # Generar el ejercicio
+        # Generar el ejercicio usando el generador existente
+        generator = exercise_types[exercise_type]
         exercise = generator.generate_exercise(difficulty_names[difficulty_level])
         
         # Convertir objeto exercise a un formato serializable para JSON
-        exercise_json = json.loads(json.dumps(exercise, default=lambda o: str(o) if isinstance(o, (Fraction, complex)) else o.__dict__ if hasattr(o, '__dict__') else repr(o)))
+        exercise_json = json.loads(json.dumps(
+            exercise, 
+            default=lambda o: str(o) if isinstance(o, (Fraction, complex)) 
+            else o._dict_ if hasattr(o, '_dict_') 
+            else repr(o)
+        ))
         
-        # Incluir metadatos adicionales
+        # Generar opciones de respuesta
+        answer_options = generate_answer_options(exercise, exercise_type)
+        
+        # Construir respuesta completa
         response = {
-            'exercise_id': random.randint(10000, 99999),  # En una implementación real, este sería un ID único generado por la base de datos
+            'exercise_id': random.randint(10000, 99999),  # ID único generado
             'exercise_type': exercise_type,
             'difficulty_level': difficulty_level,
             'difficulty_name': difficulty_names[difficulty_level],
             'exercise_data': exercise_json,
-            'exercise_text': get_exercise_text(exercise_type, exercise)
+            'exercise_text': get_exercise_text(exercise_type, exercise),
+            'answer_options': {
+                'opciones': answer_options['opciones'],
+                'indice_respuesta_correcta': answer_options['indice_respuesta_correcta']
+            },
+            'solucion': {
+                'respuesta_correcta': answer_options['respuesta_correcta'],
+                'explicacion': 'Descripción de por qué esta es la respuesta correcta'  # Opcional, puedes personalizar
+            }
         }
         
         return jsonify(response)
+    
     except Exception as e:
-        return jsonify({'error': f'Error generando ejercicio: {str(e)}'}), 500
-
+        return jsonify({
+            'error': 'Error generando ejercicio',
+            'detalle': str(e)
+        }), 500
+    
 def get_exercise_text(exercise_type, exercise):
     """Obtener texto descriptivo del ejercicio para mostrar en la web"""
     # Esta función simplificada devuelve un texto básico según el tipo de ejercicio
@@ -559,5 +716,8 @@ def get_exercise_display_name(exercise_type):
     }
     return display_names.get(exercise_type, exercise_type)
 
+    
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
+    #app.run(debug=True, host='0.0.0.0', port=5000)

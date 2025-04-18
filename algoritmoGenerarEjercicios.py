@@ -3224,5 +3224,5 @@ class ProportionalityConstantGenerator(ExerciseGenerator):
 if not os.path.exists('tutor_recommendation_model.joblib'):
     with open('tutor_recommendation_model.joblib', 'w') as f:
         pass
-tutor_system = IntelligentTutorSystem()
-tutor_system.start_session()
+#tutor_system = IntelligentTutorSystem()
+#tutor_system.start_session()
